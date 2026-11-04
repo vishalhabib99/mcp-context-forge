@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 # First-Party
 from mcpgateway.config import settings
 from mcpgateway.db import get_db
+from mcpgateway.services.cimd_service import CimdService
 from mcpgateway.services.logging_service import LoggingService
 from mcpgateway.services.server_service import ServerError, ServerNotFoundError, ServerService
 from mcpgateway.utils.log_sanitizer import sanitize_for_log
@@ -229,6 +230,26 @@ async def get_oauth_protected_resource(
     raise HTTPException(
         status_code=404, detail=("This endpoint is deprecated and non-compliant with RFC 9728. Use the path-based endpoint: /.well-known/oauth-protected-resource/servers/{server_id}/mcp")
     )
+
+
+@router.get("/.well-known/oauth-client")
+async def get_oauth_client_metadata() -> JSONResponse:
+    """Serve the gateway's OAuth Client ID Metadata Document (CIMD).
+
+    Authorization servers fetch this public document to learn the gateway's
+    client metadata. It is built from server-side configuration only and holds no secrets.
+
+    Returns:
+        JSONResponse: The Client ID Metadata Document.
+
+    Raises:
+        HTTPException: 404 if well-known endpoints or CIMD are disabled.
+    """
+    if not settings.well_known_enabled or not settings.cimd_enabled:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    headers = {"Cache-Control": f"public, max-age={settings.well_known_cache_max_age}"}
+    return JSONResponse(content=CimdService().build_document(), headers=headers)
 
 
 def get_well_known_file_content(filename: str) -> PlainTextResponse:

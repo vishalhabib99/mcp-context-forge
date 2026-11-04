@@ -1033,6 +1033,17 @@ class Settings(BaseSettings):
     )
 
     # ===================================
+    # Client ID Metadata Documents (CIMD) - Client Mode
+    # ===================================
+
+    cimd_enabled: bool = Field(
+        default=True,
+        description="Prefer Client ID Metadata Documents over Dynamic Client Registration when the authorization server advertises client_id_metadata_document_supported",
+    )
+
+    cimd_client_name: str = Field(default="ContextForge", description="client_name published in the gateway's Client ID Metadata Document")
+
+    # ===================================
     # OAuth Discovery (RFC 8414)
     # ===================================
 
