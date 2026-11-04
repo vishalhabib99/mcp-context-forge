@@ -4,9 +4,18 @@
 
 ### Deprecation Notice
 
-- Rust MCP runtime sidecar, Rust A2A runtime sidecar, and ValidationMiddleware are deprecated as of 2026-06-11 and will sunset on 2026-07-07. Use the Python MCP transport path, the Python A2A invocation path, and endpoint-level Pydantic or protocol-specific validation instead. See [Deprecations](docs/docs/deprecations.md).
+- The Rust MCP and A2A runtime sidecars are removed. Use the Python MCP transport and Python A2A invocation path.
+- ValidationMiddleware remains deprecated since 2026-06-11, past its 2026-07-07 sunset. Use endpoint-level Pydantic or protocol-specific validation. See [Deprecations](docs/docs/deprecations.md).
 
 ## [Unreleased]
+
+### Removed
+
+- **Repository-owned Rust runtime and workspace** ([#5817](https://github.com/IBM/mcp-context-forge/issues/5817)) - Remove `crates/mcp_runtime`, the root Cargo workspace, and Rust build infrastructure. The separate external Rust dataplane remains outside this removal.
+
+### Documentation
+
+- **Rust runtime removal** ([#5823](https://github.com/IBM/mcp-context-forge/issues/5823)) - Update deployment and contributor guidance, architecture diagrams, and the deprecation registry. ADR-058 records verified removals and remaining internal dispatch cleanup.
 
 ### Security
 
