@@ -68,7 +68,7 @@ ContextForge supports multiple database backends with full feature parity across
 | Database    | Support Level | Connection String Example                                    | Notes                          |
 |-------------|---------------|--------------------------------------------------------------|--------------------------------|
 | SQLite      | ✅ Full       | `sqlite:///./mcp.db`                                        | Default, file-based            |
-| PostgreSQL  | ✅ Full       | `postgresql+psycopg://postgres:changeme@localhost:5432/mcp` | Recommended for production     |
+| PostgreSQL  | ✅ Full       | `postgresql+psycopg://postgres:changeme@localhost:5432/mcp` | Recommended for production     | <!-- pragma: allowlist secret -->
 
 ### PostgreSQL System Dependencies
 
@@ -1589,7 +1589,7 @@ Create a `.env` file for Docker deployments:
 # .env file for Docker
 HOST=0.0.0.0
 PORT=4444
-DATABASE_URL=postgresql+psycopg://postgres:changeme@postgres:5432/mcp
+DATABASE_URL=postgresql+psycopg://postgres:changeme@postgres:5432/mcp  # pragma: allowlist secret
 REDIS_URL=redis://redis:6379/0
 JWT_SECRET_KEY=$(openssl rand -hex 32)
 AUTH_ENCRYPTION_SECRET=$(openssl rand -hex 32)
@@ -1616,7 +1616,7 @@ services:
     ports:
       - "4444:4444"
     environment:
-      - DATABASE_URL=postgresql+psycopg://postgres:changeme@postgres:5432/mcp
+      - DATABASE_URL=postgresql+psycopg://postgres:changeme@postgres:5432/mcp  # pragma: allowlist secret
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_KEY=$(openssl rand -hex 32)
     depends_on:
@@ -1629,7 +1629,7 @@ services:
     image: postgres:17
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_PASSWORD=changeme  # pragma: allowlist secret
       - POSTGRES_DB=mcp
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -1661,11 +1661,11 @@ kind: ConfigMap
 metadata:
   name: mcpgateway-config
 data:
-  DATABASE_URL: "postgresql+psycopg://postgres:changeme@postgres-service:5432/mcp"
+  DATABASE_URL: "postgresql+psycopg://postgres:changeme@postgres-service:5432/mcp"  # pragma: allowlist secret
   REDIS_URL: "redis://redis-service:6379/0"
   JWT_SECRET_KEY: "your-secret-key"
   BASIC_AUTH_USER: "admin"
-  BASIC_AUTH_PASSWORD: "__REPLACE_ME__run_make_init-secrets-patch-env"
+  BASIC_AUTH_PASSWORD: "__REPLACE_ME__run_make_init-secrets-patch-env"  # pragma: allowlist secret
   MCPGATEWAY_UI_ENABLED: "true"
   MCPGATEWAY_ADMIN_API_ENABLED: "true"
   LOG_LEVEL: "INFO"

@@ -667,14 +667,14 @@ uv pip install 'psycopg[binary]'   # dev (pre-built wheels)
 
 Connection URL format:
 ```bash
-DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/mcp
+DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/mcp  # pragma: allowlist secret
 ```
 
 Quick Postgres container:
 ```bash
 docker run --name mcp-postgres \
-  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=mysecretpassword \
-  -e POSTGRES_DB=mcp -p 5432:5432 -d postgres
+  -e POSTGRES_USER=postgres -e POSTGRES_DB=mcp -p 5432:5432 -d \
+  -e POSTGRES_PASSWORD=mysecretpassword postgres  # pragma: allowlist secret
 ```
 
 </details>

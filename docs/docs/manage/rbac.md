@@ -673,7 +673,7 @@ The following configuration combinations require careful consideration:
 
 ### Proxy Authentication Mode
 
-When `MCP_CLIENT_AUTH_ENABLED=false` and `TRUST_PROXY_AUTH=true`:
+When `MCP_CLIENT_AUTH_ENABLED=false` and `TRUST_PROXY_AUTH=true`: <!-- pragma: allowlist secret -->
 
 - The gateway trusts the `X-Forwarded-User` header from upstream proxy
 - No JWT validation or database verification is performed

@@ -154,7 +154,7 @@ The derived triple is memoized on `request.state` per principal, so calling the 
 ### Security Invariants (Required)
 
 - Treat `public` as platform-public scope, not internet-anonymous scope.
-- Explicit exception: when `MCP_REQUIRE_AUTH=false`, unauthenticated `/mcp` requests are allowed with public-only visibility — **unless** the target virtual server has `oauth_enabled=True`, in which case unauthenticated requests are rejected with 401 regardless of the global setting.
+- Explicit exception: when `MCP_REQUIRE_AUTH=false`, unauthenticated `/mcp` requests are allowed with public-only visibility — **unless** the target virtual server has `oauth_enabled=True`, in which case unauthenticated requests are rejected with 401 regardless of the global setting. <!-- pragma: allowlist secret -->
 - Keep the two-layer model on every path:
   - Layer 1: token scoping controls what a caller can see.
   - Layer 2: RBAC controls what a caller can do.
@@ -270,9 +270,9 @@ RELOAD=false
 # Auth
 JWT_SECRET_KEY=your-secret-key
 BASIC_AUTH_USER=admin
-BASIC_AUTH_PASSWORD=changeme
+BASIC_AUTH_PASSWORD=changeme  # pragma: allowlist secret
 AUTH_REQUIRED=true                   # Set false ONLY for development
-AUTH_ENCRYPTION_SECRET=             # REQUIRED: generate with: make init-secrets-patch-env
+AUTH_ENCRYPTION_SECRET=             # REQUIRED: generate with: make init-secrets-patch-env  # pragma: allowlist secret
 
 # Features
 MCPGATEWAY_UI_ENABLED=false          # .env.example sets true
@@ -373,8 +373,8 @@ The `down_revision` MUST point to the current head. **Never guess or copy from o
 
 ```python
 # CORRECT: Points to actual current head (verified via `alembic heads`)
-revision: str = "abc123def456"
-down_revision: Union[str, Sequence[str], None] = "43c07ed25a24"  # Current head
+revision: str = "abc123def456"  # pragma: allowlist secret
+down_revision: Union[str, Sequence[str], None] = "43c07ed25a24"  # Current head  # pragma: allowlist secret
 
 # WRONG: Creates multiple heads (breaks all tests)
 down_revision: Union[str, Sequence[str], None] = "some_old_revision"

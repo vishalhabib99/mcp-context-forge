@@ -760,7 +760,7 @@ The `-k` flag skips SSL certificate verification for self-signed certificates.
 
 **Fix**:
 
-1. Verify `.env` file contains: `KEY_FILE_PASSWORD=your-passphrase`
+1. Verify `.env` file contains: `KEY_FILE_PASSWORD=your-passphrase` <!-- pragma: allowlist secret -->
 2. Verify docker-compose.yml references it: `- KEY_FILE_PASSWORD=${KEY_FILE_PASSWORD}`
  3. Restart gateway: `docker compose restart gateway`
 
