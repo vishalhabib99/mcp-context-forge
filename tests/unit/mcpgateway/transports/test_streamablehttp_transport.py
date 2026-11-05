@@ -2350,7 +2350,7 @@ async def test_auth_all_ok(monkeypatch):
         assert token == "good-token"
         return {"ok": True}
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     messages = []
 
@@ -2373,7 +2373,7 @@ async def test_auth_failure(monkeypatch):
     async def fake_verify(_):  # noqa: D401 - stub that always fails
         raise HTTPException(status_code=401, detail="bad token")
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     # Enable strict auth mode to test 401 behavior
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", True)
 
@@ -2514,7 +2514,7 @@ async def test_streamable_http_auth_allows_mcp_sse_with_valid_token(monkeypatch)
     async def fake_verify(token):
         return {"sub": "admin@example.com", "teams": None, "is_admin": True}
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/mcp/sse", headers=[(b"authorization", b"Bearer valid-token")])
     called = []
@@ -2542,7 +2542,7 @@ async def test_streamable_http_auth_allows_mcp_message_with_valid_token(monkeypa
     async def fake_verify(token):
         return {"sub": "admin@example.com", "teams": None, "is_admin": True}
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/mcp/message", headers=[(b"authorization", b"Bearer valid-token")])
     called = []
@@ -2787,7 +2787,7 @@ async def test_streamable_http_auth_wrong_scheme(monkeypatch):
     async def fake_verify(token):
         raise AssertionError("Should not be called")
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     # Enable strict auth mode to test 401 behavior
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", True)
     # Stub per-server OAuth check — this test validates scheme rejection, not OAuth
@@ -2811,7 +2811,7 @@ async def test_streamable_http_auth_bearer_no_token(monkeypatch):
     async def fake_verify(token):
         raise AssertionError("Should not be called")
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     # Enable strict auth mode to test 401 behavior
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", True)
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer")])
@@ -2833,7 +2833,7 @@ async def test_streamable_http_auth_bearer_no_token_permissive_mode(monkeypatch)
     async def fake_verify(token):
         raise AssertionError("Should not be called")
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", False)
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer")])
     called = []
@@ -3195,7 +3195,7 @@ async def test_streamable_http_auth_sets_user_context_with_teams(monkeypatch):
             "user": {"is_admin": True},
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return valid membership (skip DB lookup)
     mock_auth_cache = MagicMock()
@@ -3234,7 +3234,7 @@ async def test_streamable_http_auth_normalizes_dict_teams(monkeypatch):
             "user": {"is_admin": False},
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return valid membership (skip DB lookup)
     mock_auth_cache = MagicMock()
@@ -3266,7 +3266,7 @@ async def test_streamable_http_auth_handles_empty_teams(monkeypatch):
             "user": {},
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
 
@@ -3295,7 +3295,7 @@ async def test_streamable_http_auth_uses_email_field_fallback(monkeypatch):
             "teams": ["team_x"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return valid membership (skip DB lookup)
     mock_auth_cache = MagicMock()
@@ -3325,7 +3325,7 @@ async def test_streamable_http_auth_handles_missing_teams_key(monkeypatch):
             # No teams key - legacy token without team scoping
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
 
@@ -3352,7 +3352,7 @@ async def test_streamable_http_auth_rejects_removed_team_member(monkeypatch):
             "teams": ["team_a"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return False (user was removed from team)
     mock_auth_cache = MagicMock()
@@ -3385,7 +3385,7 @@ async def test_streamable_http_auth_validates_team_membership_on_cache_miss(monk
             "teams": ["team_a", "team_b"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return None (cache miss)
     mock_auth_cache = MagicMock()
@@ -3435,7 +3435,7 @@ async def test_streamable_http_auth_handles_null_teams(monkeypatch):
             "teams": None,  # Explicit null - treated same as missing
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
 
@@ -3461,7 +3461,7 @@ async def test_streamable_http_auth_top_level_is_admin(monkeypatch):
             "is_admin": True,  # Top-level is_admin (legacy format)
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
 
@@ -3488,7 +3488,7 @@ async def test_streamable_http_auth_nested_is_admin_takes_precedence(monkeypatch
             "user": {"is_admin": True},  # Nested says admin
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
 
@@ -6348,7 +6348,7 @@ async def test_streamable_http_auth_proxy_user_context_on_valid_jwt(monkeypatch)
         # Return something that is truthy but not a dict
         return "string_payload"
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_client_auth_enabled", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.trust_proxy_auth", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.trust_proxy_auth_dangerously", True)
@@ -6405,7 +6405,7 @@ async def test_streamable_http_auth_caches_positive_team_membership(monkeypatch)
             "teams": ["team_a"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock auth_cache to return None (cache miss) so we go to DB
     mock_auth_cache = MagicMock()
@@ -6460,7 +6460,7 @@ async def test_streamable_http_auth_db_context_manager(monkeypatch):
             "teams": ["team_a"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     mock_auth_cache = MagicMock()
     mock_auth_cache.get_team_membership_valid_sync.return_value = None
@@ -9391,7 +9391,7 @@ async def test_streamable_http_auth_allows_authenticated_oauth_server_on_get(mon
             "user": {"is_admin": False},
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", False)
 
     mock_auth_cache = MagicMock()
@@ -11354,7 +11354,7 @@ async def test_auth_session_token_admin_bypass(monkeypatch):
             "is_admin": True,
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer session-tok")])
     sent = []
@@ -11381,7 +11381,7 @@ async def test_auth_session_token_resolves_teams_from_db(monkeypatch):
             "is_admin": False,
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     mock_resolve = AsyncMock(return_value=["team-a", "team-b"])
 
@@ -11418,7 +11418,7 @@ async def test_auth_session_token_no_email_public_only(monkeypatch):
             # No sub, no email
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer session-tok")])
     sent = []
@@ -11443,7 +11443,7 @@ async def test_streamable_http_auth_verify_credentials_non_dict_payload(monkeypa
     async def fake_verify(token):
         return "ok"  # non-dict payload
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer good-token")])
     sent = []
@@ -11466,7 +11466,7 @@ async def test_streamable_http_auth_rejects_revoked_jwt(monkeypatch):
             "teams": ["team-a"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11496,7 +11496,7 @@ async def test_streamable_http_auth_uses_cached_auth_context(monkeypatch):
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11545,7 +11545,7 @@ async def test_streamable_http_auth_rejects_revoked_cached_auth_context(monkeypa
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11593,7 +11593,7 @@ async def test_streamable_http_auth_rejects_inactive_cached_auth_context(monkeyp
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11641,7 +11641,7 @@ async def test_streamable_http_auth_uses_batched_auth_context(monkeypatch):
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11691,7 +11691,7 @@ async def test_streamable_http_auth_rejects_revoked_batched_auth_context(monkeyp
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11738,7 +11738,7 @@ async def test_streamable_http_auth_rejects_inactive_batched_auth_context(monkey
             "teams": [],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11784,7 +11784,7 @@ async def test_streamable_http_auth_rejects_inactive_user(monkeypatch):
     disabled_user = MagicMock()
     disabled_user.is_active = False
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11818,7 +11818,7 @@ async def test_streamable_http_auth_revocation_check_exception_fails_open(monkey
     active_user = MagicMock()
     active_user.is_active = True
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     scope = _make_scope("/servers/1/mcp", headers=[(b"authorization", b"Bearer token")])
     sent = []
@@ -11847,7 +11847,7 @@ async def test_streamable_http_auth_rejects_missing_user_when_required(monkeypat
             "teams": ["team-a"],
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.platform_admin_email", "admin@example.com")
 
@@ -13890,7 +13890,7 @@ async def test_streamable_http_auth_verify_exception_fallback_permissive(monkeyp
     from mcpgateway.transports.streamablehttp_transport import streamable_http_auth, user_context_var
 
     # Force verify_credentials to raise HTTPException (its actual failure mode)
-    monkeypatch.setattr(tr, "verify_credentials", AsyncMock(side_effect=HTTPException(status_code=401, detail="Auth Service Down")))
+    monkeypatch.setattr(tr, "verify_credentials_cached", AsyncMock(side_effect=HTTPException(status_code=401, detail="Auth Service Down")))
 
     # Settings: Trust proxy is ON, but we won't provide header. Require auth is OFF (permissive).
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.trust_proxy_auth", True)
@@ -14588,7 +14588,7 @@ async def test_auth_jwt_session_token_keys_cache_and_lookups_by_email(monkeypatc
     """
     handler = _auth_handler()
 
-    monkeypatch.setattr(tr, "verify_credentials", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "jti": "jti-1"}))
+    monkeypatch.setattr(tr, "verify_credentials_cached", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "jti": "jti-1"}))
     monkeypatch.setattr(tr._StreamableHttpAuthHandler, "_route_idp_issued_token", AsyncMock(return_value=None))
     monkeypatch.setattr("mcpgateway.auth._get_email_by_id_sync", lambda user_id: "dev@example.com")
 
@@ -14627,7 +14627,7 @@ async def test_auth_jwt_session_token_unknown_user_still_denied(monkeypatch):
     sent = []
     monkeypatch.setattr(tr._StreamableHttpAuthHandler, "_send_error", AsyncMock(side_effect=lambda **kw: (sent.append(kw), False)[1]))
 
-    monkeypatch.setattr(tr, "verify_credentials", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "jti": "jti-2"}))
+    monkeypatch.setattr(tr, "verify_credentials_cached", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "jti": "jti-2"}))
     monkeypatch.setattr(tr._StreamableHttpAuthHandler, "_route_idp_issued_token", AsyncMock(return_value=None))
     monkeypatch.setattr("mcpgateway.auth._get_email_by_id_sync", lambda user_id: None)
     monkeypatch.setattr(tr.settings, "auth_cache_enabled", False)
@@ -14650,7 +14650,7 @@ async def test_auth_jwt_session_token_platform_admin_escape_hatch(monkeypatch):
     """
     handler = _auth_handler()
 
-    monkeypatch.setattr(tr, "verify_credentials", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "is_admin": True, "jti": "jti-3"}))
+    monkeypatch.setattr(tr, "verify_credentials_cached", AsyncMock(return_value={"sub": SESSION_SUB_UUID, "token_use": "session", "is_admin": True, "jti": "jti-3"}))
     monkeypatch.setattr(tr._StreamableHttpAuthHandler, "_route_idp_issued_token", AsyncMock(return_value=None))
     monkeypatch.setattr("mcpgateway.auth._get_email_by_id_sync", lambda user_id: "admin@example.com")
     monkeypatch.setattr(tr.settings, "auth_cache_enabled", False)
@@ -14672,7 +14672,7 @@ async def test_auth_jwt_legacy_token_performs_no_subject_lookup(monkeypatch):
     handler = _auth_handler()
     lookup = Mock(return_value="should-not-be-used@example.com")
 
-    monkeypatch.setattr(tr, "verify_credentials", AsyncMock(return_value={"sub": "legacy@example.com", "token_use": "api", "jti": "jti-4"}))
+    monkeypatch.setattr(tr, "verify_credentials_cached", AsyncMock(return_value={"sub": "legacy@example.com", "token_use": "api", "jti": "jti-4"}))
     monkeypatch.setattr(tr._StreamableHttpAuthHandler, "_route_idp_issued_token", AsyncMock(return_value=None))
     monkeypatch.setattr("mcpgateway.auth._get_email_by_id_sync", lookup)
     monkeypatch.setattr(tr.settings, "auth_cache_enabled", False)
@@ -15271,7 +15271,7 @@ async def test_streamable_http_auth_allows_authenticated_oauth_server(monkeypatc
             "user": {"is_admin": False},
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", False)
 
     # Mock auth_cache to return valid membership (skip DB lookup)
@@ -16174,7 +16174,7 @@ async def test_streamable_http_auth_sqlalchemy_error_returns_503(monkeypatch):
             "is_admin": False,
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", True)
 
     # normalize_token_teams is imported locally from mcpgateway.auth
@@ -16206,7 +16206,7 @@ async def test_streamable_http_auth_unexpected_exception_returns_401(monkeypatch
     async def fake_verify(token):
         raise RuntimeError("Something completely unexpected")
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.mcp_require_auth", True)
 
     scope = _make_scope(
@@ -16831,7 +16831,7 @@ async def test_auth_jwt_scoped_permissions_in_user_context(monkeypatch):
         "scopes": {"permissions": ["tools.read", "tools.execute", "servers.use"]},
     }
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     # Admin with normalize_token_teams returning None bypasses team membership check
     monkeypatch.setattr("mcpgateway.auth.normalize_token_teams", lambda payload: None)
 
@@ -16868,7 +16868,7 @@ async def test_auth_jwt_uuid_sub_uses_signed_user_email_without_uuid_lookup(monk
     user_record.is_active = True
     user_record.is_admin = False
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
@@ -16900,7 +16900,7 @@ async def test_auth_jwt_uuid_sub_resolves_to_email_when_metadata_missing(monkeyp
 
     get_email_by_id = MagicMock(return_value="resolved@example.com")
     get_user_by_email = MagicMock(return_value=user_record)
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
@@ -16928,7 +16928,7 @@ async def test_auth_jwt_unknown_uuid_sub_rejected_when_user_required(monkeypatch
     send_error = AsyncMock(return_value=False)
     get_user_by_email = MagicMock()
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
     monkeypatch.setattr("mcpgateway.auth._get_email_by_id_sync", MagicMock(return_value=None))
     monkeypatch.setattr("mcpgateway.auth._get_user_by_email_sync", get_user_by_email)
@@ -16962,7 +16962,7 @@ async def test_auth_jwt_uses_cached_auth_context_and_cached_teams(monkeypatch):
     auth_cache.get_user_teams = AsyncMock(return_value=["team-a"])
     auth_cache.get_team_membership_valid_sync = MagicMock(return_value=True)
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17008,7 +17008,7 @@ async def test_auth_jwt_falls_back_after_cache_errors_and_tolerates_cache_set_fa
     auth_cache.set_user_teams = AsyncMock(return_value=None)
     auth_cache.get_team_membership_valid_sync = MagicMock(return_value=True)
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17049,7 +17049,7 @@ async def test_auth_jwt_uses_batched_auth_context_and_caches_team_list(monkeypat
     auth_cache.set_user_teams = AsyncMock(side_effect=RuntimeError("team cache down"))
     auth_cache.get_team_membership_valid_sync = MagicMock(return_value=True)
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", True)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17082,7 +17082,7 @@ async def test_auth_jwt_cached_context_requires_user_when_db_user_missing(monkey
     monkeypatch.setattr(_StreamableHttpAuthHandler, "_send_error", send_error)
     handler = _StreamableHttpAuthHandler(scope={"type": "http", "headers": []}, receive=AsyncMock(), send=AsyncMock())
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
@@ -17105,7 +17105,7 @@ async def test_auth_jwt_returns_invalid_credentials_when_cache_lookup_raises_htt
     monkeypatch.setattr(_StreamableHttpAuthHandler, "_send_error", send_error)
     handler = _StreamableHttpAuthHandler(scope={"type": "http", "headers": []}, receive=AsyncMock(), send=AsyncMock())
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", False)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17128,7 +17128,7 @@ async def test_auth_jwt_batched_context_requires_user_when_db_user_missing(monke
     monkeypatch.setattr(_StreamableHttpAuthHandler, "_send_error", send_error)
     handler = _StreamableHttpAuthHandler(scope={"type": "http", "headers": []}, receive=AsyncMock(), send=AsyncMock())
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.require_user_in_db", True)
@@ -17151,7 +17151,7 @@ async def test_auth_jwt_records_batch_team_cache_hit_on_success(monkeypatch):
     auth_cache.set_user_teams = AsyncMock(return_value=None)
     auth_cache.get_team_membership_valid_sync = MagicMock(return_value=True)
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", True)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17172,7 +17172,7 @@ async def test_auth_jwt_uses_batched_team_ids_when_auth_cache_is_disabled(monkey
     auth_cache = MagicMock()
     auth_cache.get_team_membership_valid_sync = MagicMock(return_value=True)
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", False)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", True)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17201,7 +17201,7 @@ async def test_auth_jwt_returns_invalid_credentials_when_batched_lookup_raises_h
     monkeypatch.setattr(_StreamableHttpAuthHandler, "_send_error", send_error)
     handler = _StreamableHttpAuthHandler(scope={"type": "http", "headers": []}, receive=AsyncMock(), send=AsyncMock())
 
-    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=jwt_payload))
+    monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=jwt_payload))
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_enabled", True)
     monkeypatch.setattr("mcpgateway.transports.streamablehttp_transport.settings.auth_cache_batch_queries", True)
     monkeypatch.setattr("mcpgateway.cache.auth_cache.get_auth_cache", lambda: auth_cache)
@@ -17686,7 +17686,7 @@ async def test_auth_jwt_sets_trace_context_for_session_token(monkeypatch):
     handler = tr._StreamableHttpAuthHandler(scope, AsyncMock(), AsyncMock())
 
     with (
-        patch("mcpgateway.transports.streamablehttp_transport.verify_credentials", AsyncMock(return_value=payload)),
+        patch("mcpgateway.transports.streamablehttp_transport.verify_credentials_cached", AsyncMock(return_value=payload)),
         patch("mcpgateway.auth._check_token_revoked_sync", return_value=False),
         patch("mcpgateway.auth._get_user_by_email_sync", return_value=user_record),
         patch("mcpgateway.auth._get_team_name_by_id_sync", return_value="Stream Team"),
@@ -18981,7 +18981,7 @@ async def test_streamable_http_auth_sso_platform_admin_gets_admin_bypass(monkeyp
             "user": {"is_admin": False},  # No JWT admin flag
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock _get_user_by_email_sync to return a user with is_admin=True
     mock_user = MagicMock()
@@ -19030,7 +19030,7 @@ async def test_streamable_http_auth_basic_auth_admin_gets_admin_bypass(monkeypat
             "user": {"is_admin": True},  # JWT admin flag set
         }
 
-    monkeypatch.setattr(tr, "verify_credentials", fake_verify)
+    monkeypatch.setattr(tr, "verify_credentials_cached", fake_verify)
 
     # Mock _get_user_by_email_sync to return None (user NOT in database)
     def mock_get_user(email):
