@@ -38,6 +38,8 @@
 
 ### Fixed
 
+- **OIDC JWKS fetches honor `SKIP_SSL_VERIFY`** ([#4026](https://github.com/IBM/mcp-context-forge/issues/4026)) - JWKS retrieval for SSO and external-IdP token verification now uses the shared TLS verification setting, like OIDC discovery, token exchange, and user info. Before, an identity provider with a self-signed certificate failed at JWKS retrieval even with `SKIP_SSL_VERIFY=true`. With the flag set, the gateway logs a warning on each JWKS fetch, because unverified JWKS keys let a network attacker forge tokens. Use the flag in development only. Per-provider CA bundles remain open under #4026.
+
 - **REST URL template reuses a placeholder** - A REST tool URL template that uses the same placeholder twice, such as `/{id}/x/{id}`, now fills both occurrences. Before, it failed with "Required URL parameter 'id' not found in arguments".
 
 - **A2A and gateway credential masking** ([#6704](https://github.com/IBM/mcp-context-forge/issues/6704)) - `A2AAgentRead` and `GatewayRead` mask stored credentials on every `a2a.read` and `gateways.read` path. Regression tests cover basic, bearer, and authheaders auth types.
@@ -50,7 +52,7 @@
 
 - **Gateway description-only update keeps credentials** - `PUT /gateways/{gateway_id}` with only unrelated fields, such as `description`, no longer wipes `auth_value`.
 
-- **Plugin manager rebuilds** ([#6532](https://github.com/IBM/mcp-context-forge/issues/6532)) - Tools of a team without tool-specific plugin bindings share one cached plugin manager, so external plugins such as OPA initialise once per team instead of once per tool. Tools with their own bindings keep their own manager. The new `PLUGIN_MANAGER_CACHE_TTL` setting (default `300` seconds, was a fixed 30 seconds) controls how long a manager is cached; `0` disables expiry. The invalidation listener now rebuilds managers after each Redis resubscribe.
+- **Plugin manager rebuilds** ([#6532](https://github.com/IBM/mcp-context-forge/issues/6532)) - Tools of a team without tool-specific plugin bindings share one cached plugin manager, so external plugins such as OPA initialise once per team instead of once per tool. Tools with their own bindings keep their own manager. The invalidation listener now rebuilds managers after each Redis resubscribe.
 - **LLM Chat loads MCP tools with the MCP SDK client** ([#7090](https://github.com/IBM/mcp-context-forge/issues/7090), [#7332](https://github.com/IBM/mcp-context-forge/pull/7332)) - `langchain-mcp-adapters` has no release compatible with MCP SDK 2.x and is removed from the `llmchat` extra; LLM Chat lists and calls tools through `mcp.client.Client`.
 
 - **Bearer token precedence over auth cookies** - When a request carries both a Bearer token in the configured auth header (`AUTH_HEADER_NAME`, default `Authorization`) and a `jwt_token` or `access_token` cookie, every auth layer (token scoping, `require_auth`, `require_admin_auth`, `/admin/*`, LLM chat `connect`) now authenticates the Bearer principal, and token scopes apply to that credential. Cookie-only and `Authorization: Basic` requests keep cookie authentication. LLM chat `connect` also accepts the `access_token` cookie.
